@@ -1,8 +1,11 @@
-import { Injectable, OnModuleInit} from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
 import { DTOlocRegion } from './loc_region.dto/loc_region.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { loc_regionEntitiy } from './loc_region.entity/loc_region.entity';
+import { UpdateRegionDto } from './loc_region.dto/update_loc_region.dto';
+
+
 
 @Injectable()
 export class LocRegionService implements OnModuleInit {
@@ -28,26 +31,29 @@ export class LocRegionService implements OnModuleInit {
         }
     async addLocRegion(dto: DTOlocRegion) {
         const existingLocRegion = await this.locRegionEntity.findOne({ where: { name: dto.name } });
-        if (existingLocRegion) {
-            return { message: 'Location Region already exists' };
-        } else {
-            const newLocRegion = this.locRegionEntity.create({
-                name: dto.name
-            });
-            await this.locRegionEntity.save(newLocRegion);
-            return { message: 'Location Region added successfully' };
-        }
+        if (!existingLocRegion) {throw new NotFoundException("Region name faunded")} 
+        const new_region = await this.locRegionEntity.create({name: dto.name})
+        await this.locRegionEntity.save(new_region)
+        return {message: "new region saved", region: new_region}
     }
 
     async getAllLocRegions() {
         return await this.locRegionEntity.find();
     }
 
+    async updateLocRegion(id: string, dto: UpdateRegionDto) {
+        const locRegion = await this.locRegionEntity.findOne({ where: { id: Number(id) } });
+        if (!locRegion) {throw new NotFoundException("Loc_region not faund")}
+        
+        if(dto.name){locRegion.name = dto.name}
+        if(dto.status !== undefined ){locRegion.status = dto.status}
+        await this.locRegionEntity.save(locRegion);
+        return { message: 'Location Region updated successfully', locRegion };
+    }
+
     async deleteLocRegion(id: string) {
         const locRegion = await this.locRegionEntity.findOne({ where: { id: Number(id) } });
-        if (!locRegion) {
-            return { message: 'Location Region not found' };
-        }
+        if (!locRegion) {throw new NotFoundException("region not found")}
         await this.locRegionEntity.remove(locRegion);
         return { message: 'Location Region deleted successfully' };
     }

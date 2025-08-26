@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany} from 'typeorm'
-import { RoleEntity } from './role.entity';
+import { RoleEntity } from '../../user_role/user_role.entity/role.entity';
 import { ServiceUserEntity } from 'src/service_user/service_user.entity/service_user.entity';
 import { DepartamentEntity } from '../../departament/deportament_entity/deportament.entity';
 import { ServiceEntity } from 'src/service/service_entity/service.entity';
@@ -28,7 +28,7 @@ export class User{
 
     @ManyToOne(() => RoleEntity, role => role.users, { eager: true })
     @JoinColumn({ name: 'role_id' })
-    role_id: RoleEntity;
+    role: RoleEntity;
 
     @Column({ type: 'int', default: 1 })
     status: number;
@@ -37,12 +37,15 @@ export class User{
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp', precision: 6, default: () => 'CURRENT_TIMESTAMP(6)', onUpdate: 'CURRENT_TIMESTAMP(6)' })
+    @UpdateDateColumn({ type: 'timestamp', precision: 6, default: () => 'CURRENT_TIMESTAMP(6)', onUpdate: 'CURRENT_TIMESTAMP(6)'})
     updatedAt: Date;
 
 
+    @Column({ type: 'int', nullable: true })
+    chat_id: number;
+
     @Column({ type: 'varchar', length: 255, nullable: true })
-    chat_id: string;
+    photo: string;
 
     //service_user
     @OneToMany(() => ServiceUserEntity, su => su.user)

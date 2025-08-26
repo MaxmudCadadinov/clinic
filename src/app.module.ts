@@ -12,6 +12,7 @@ import { LocRegionModule } from './loc_region/loc_region.module';
 import { LocDistrictModule } from './loc_district/loc_district.module';
 import { SourceModule } from './source/source.module';
 import { ClientModule } from './client/client.module';
+import { UserRoleModule } from './user_role/user_role.module';
 
 
 
@@ -36,6 +37,7 @@ import { ClientModule } from './client/client.module';
     LocDistrictModule,
     SourceModule,
     ClientModule,
+    UserRoleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

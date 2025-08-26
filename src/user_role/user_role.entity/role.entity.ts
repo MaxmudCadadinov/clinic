@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm'
-import { User } from './users.entity';
+import { User } from '../../users/entities/users.entity';
 
 
 @Entity('user_role')
@@ -20,7 +20,7 @@ export class RoleEntity {
     @UpdateDateColumn({type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP',})
     updatedAt: Date;
 
-    @OneToMany(() => User, user => user.role_id)
+    @OneToMany(() => User, user => user.role)
     users: User[];
 
     

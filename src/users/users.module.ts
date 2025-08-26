@@ -4,9 +4,10 @@ import { UsersController } from './users.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
 import { JwtModule } from '@nestjs/jwt';
-import { RoleEntity } from './entities/role.entity';
+import { RoleEntity } from '../user_role/user_role.entity/role.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/guard/jwt.strategy';
+import { FileService } from './uploadPhoto';
 
 
 @Module({
@@ -17,7 +18,7 @@ JwtModule.register({
       signOptions: { expiresIn: '15m' },
     }),],
   controllers: [UsersController],
-  providers: [UsersService, JwtStrategy],
+  providers: [UsersService, JwtStrategy, FileService],
   exports: [PassportModule, JwtModule],
 })
 export class UsersModule {}

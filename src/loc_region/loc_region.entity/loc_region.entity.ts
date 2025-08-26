@@ -1,5 +1,6 @@
 import {Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { loc_districtEntitiy } from 'src/loc_district/loc_district.entity/loc_district.entity';
+import { ClientEntity } from '../../client/client.entity/client.entity';
 
 @Entity('loc_region')
 export class loc_regionEntitiy {
@@ -20,5 +21,8 @@ export class loc_regionEntitiy {
 
     @OneToMany(() => loc_districtEntitiy, (loc_district) => loc_district.region)
     region_loc_districts: loc_districtEntitiy[];
+
+    @OneToMany(() => ClientEntity, (cliententity) => cliententity.region)
+    client: ClientEntity[];
 
 }

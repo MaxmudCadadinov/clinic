@@ -1,8 +1,10 @@
-import {Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/users.entity'
+import { ClientEntity } from '../../client/client.entity/client.entity';
+
 
 @Entity('client_group')
-export class ClientGroupEntitiy {
+export class ClientGroupEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -25,5 +27,8 @@ export class ClientGroupEntitiy {
     @ManyToOne(() => User, { nullable: true })
     @JoinColumn({ name: 'modify_id' })
     modify: User
+
+    @OneToMany(() => ClientEntity, client => client.group)
+    client: ClientEntity[];
 
 }

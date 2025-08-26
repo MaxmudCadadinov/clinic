@@ -21,14 +21,14 @@ export class ServiceEntity{
     @JoinColumn({ name: 'departament_id' })
     departament: DepartamentEntity;
 
+    @Column({ type: 'int', default: 1 })
+    status: number;
+
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     created: Date;
 
     @UpdateDateColumn({ type: 'timestamp', precision: 6, default: () => 'CURRENT_TIMESTAMP(6)', onUpdate: 'CURRENT_TIMESTAMP(6)' })
     updated: Date;
-
-    @Column({ type: 'int', default: 1 })
-    status: number;
 
     @ManyToOne(() => User, (u) => u.modifiedServices)
     @JoinColumn({ name: 'modify_id' })
