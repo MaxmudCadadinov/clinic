@@ -17,13 +17,13 @@ export class User{
     @Column({ type: 'varchar', length: 255 })
     user_name: string;
 
-    @Column({ type: 'varchar', length: 500, nullable: true })
+    @Column({ type: 'varchar', length: 500, nullable: true, select: false })
     password: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     phone: string
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column({ type: 'varchar', length: 255, nullable: true, select: false })
     refresh_token: string;
 
     @ManyToOne(() => RoleEntity, role => role.users, { eager: true })
@@ -34,7 +34,7 @@ export class User{
     status: number;
 
 
-    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP(6)' })
     createdAt: Date;
 
     @UpdateDateColumn({ type: 'timestamp', precision: 6, default: () => 'CURRENT_TIMESTAMP(6)', onUpdate: 'CURRENT_TIMESTAMP(6)'})

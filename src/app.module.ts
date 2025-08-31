@@ -26,7 +26,7 @@ import { UserRoleModule } from './user_role/user_role.module';
     password: '5588',
     database: 'clinic',
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
-    synchronize: false,
+    synchronize: true,
   }),
     UsersModule,
     DepartamentModule,

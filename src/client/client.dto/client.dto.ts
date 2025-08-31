@@ -17,9 +17,9 @@ export class ClientDto{
     @IsEnum(clientType, {message: 'gender must be either MALE or FEMALE'})
     gender: clientType;
 
-    @ApiProperty()
+    @ApiProperty({example: '1995-08-27'})
     @IsDateString() 
-    birthday: string;
+    birthday: Date;
 
     @ApiProperty()
     @IsString()

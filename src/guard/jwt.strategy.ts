@@ -14,8 +14,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     // payload — это то, что ты зашил в токен при логине
-    console.log('JWT payload перед validate:', payload);
-    return { userId: payload.id, roleId: payload.role_id };
+    //console.log('JWT payload перед validate:', payload);
+    console.log(payload)
+    return payload;
   }
 }
 

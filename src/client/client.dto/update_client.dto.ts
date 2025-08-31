@@ -51,12 +51,6 @@ export class UpdateClientDto {
   @Length(0, 255)
   address?: string;
 
-//   @IsOptional()
-//   @IsNumber()
-//   @Min(0)
-//   @Type(() => Number)
-//   balance?: number;
-
 @ApiProperty()
   @IsOptional()
   @IsString()

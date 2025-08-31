@@ -2,11 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DTOServiceUSer } from './serviceUser.dto/serviceUser.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ServiceUserEntity } from './service_user.entity/service_user.entity';
-import { Repository } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { UpdateUserServiceDto } from './serviceUser.dto/update_service_user.dto';
 import { User } from '../users/entities/users.entity'
 import { ServiceEntity } from '../service/service_entity/service.entity'
-
+import { ServiceUserFilterDto } from './serviceUser.dto/filter_serviceUser.dto'
+import { PaginationDto } from '../paginationDTO'
 
 @Injectable()
 export class ServiceUserService {
@@ -33,27 +34,48 @@ constructor(
         }
 
 
-    async getAllServiceUsers() {
-        return await this.serviceUserRepository.find({relations: ['user', 'service', 'register']});
-        
+    async getAllServiceUsers(dto: ServiceUserFilterDto ) {
+        const where: any = {};
+        if(dto.user_id){where.user = {id: Number(dto.user_id)}}
+        if(dto.service_id){where.service = {id: Number(dto.service_id)}}
+        if(dto.register_id){where.register = {id: Number(dto.register_id)}}
+        if(dto.modify_id){where.modify = {id: Number(dto.modify_id)}}
+        if(dto.status!==undefined){where.status = dto.status}
+        if(dto.type){where.type = dto.type}
+        if(dto.value!==undefined){where.value = dto.value}
+        if (dto.created_from && dto.created_to) {
+            where.created = Between(new Date(dto.created_from), new Date(dto.created_to))}
+        if (dto.created_from && !dto.created_to) {
+            where.created = MoreThanOrEqual(new Date(dto.created_from))}
+        if (!dto.created_from && dto.created_to) {
+            where.created = LessThanOrEqual(new Date(dto.created_to))}
+
+        const page = dto.page && dto.page > 0 ? dto.page : 1;
+        const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
+       
+       const [all_service_users, total] = await this.serviceUserRepository.findAndCount({where, 
+        relations: ['user', 'service', 'register', 'modify'], 
+        skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }});
+
+        return {all_service_users, total}
     }
 
     async updateServiceUser(id: string, dto: UpdateUserServiceDto, updated_id) {
         const serviceUser = await this.serviceUserRepository.findOne({ where: { id: Number(id) } });
-        const modified_user = await this.userEntity.findOne({where: {id: Number(updated_id)}})
         if (!serviceUser) {throw new NotFoundException(`User with id=${id} user not found`)}
+        const modified_user = await this.userEntity.findOne({where: {id: Number(updated_id)}})
         if(!modified_user){throw new NotFoundException(`modified user not found`)}
-        if(dto.user_id){
+        if(dto.user_id!==undefined){
             const user = await this.userEntity.findOne({where:{id: Number(dto.user_id)}})
             if (!user){throw new NotFoundException(`user not found`)}
             serviceUser.user = user}
-        if(dto.service_id){
+        if(dto.service_id!==undefined){
             const service = await this.serviceEntity.findOne({where: {id: dto.service_id}})
             if(!service){throw new NotFoundException(`service not found`)}
             serviceUser.service = service}
-        if(dto.status){serviceUser.status = dto.status}
-        if(dto.type){serviceUser.type = dto.type}
-        if(dto.value){serviceUser.value = dto.value} 
+        if(dto.status!==undefined){serviceUser.status = dto.status}
+        if(dto.type!==undefined){serviceUser.type = dto.type}
+        if(dto.value!==undefined){serviceUser.value = dto.value} 
         serviceUser.modify = modified_user
 
         return await this.serviceUserRepository.save(serviceUser)
@@ -64,7 +86,7 @@ constructor(
         if (!serviceUser) {
             return { message: 'Service User not found' };
         }
-        await this.serviceUserRepository.remove(serviceUser);
+        await this.serviceUserRepository.update(serviceUser.id, {status: 0});
         return { message: 'Service User deleted successfully' };
     }
 }

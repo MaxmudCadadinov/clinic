@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Delete, Patch, Req } from '@nestjs/common';
+import { Controller, Post, Query, Body, Get, Param, Delete, Patch, Req, ParseIntPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AddUser } from './dto/add_user.dto';
 import { LoginUser } from './dto/login_user.dto';
@@ -10,7 +10,9 @@ import { Roles } from '../guard/roles.decorator';
 import { RolesGuard } from '../guard/roles.guard';
 import { UpdateUserDto } from './dto/update_user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerUserConfig } from './multer.config'
+import { UserFilterDto } from './dto/userFilterDTO'
 
 
 @ApiTags('users') 
@@ -20,27 +22,29 @@ export class UsersController {
 //
   @ApiBearerAuth()
   @Post('/add_user')
+  @UseInterceptors(FileInterceptor('photo', multerUserConfig))
   @UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles(1) // Только администратор может добавлять пользователей
-  async add_user(@Body() dto: AddUser){
+  async add_user(@Body() dto: AddUser, @UploadedFile() file?: Express.Multer.File,){
+
+    if(file){dto.photo = file.path;}
     return await this.usersService.add_user(dto);
   }
 
   @Get('all_users')
   @UseGuards(JwtAuthGuard)
-  async get_user() {
-    return await this.usersService.get_all_user();
+  async get_user(@Query() dto: UserFilterDto) {
+    return await this.usersService.get_all_user(dto);
   }
 
   @Patch('update_user/:id')
   @UseGuards(JwtAuthGuard)
-  async update_user(@Param('id') id: string, @Body() dto: UpdateUserDto, ) {
+  async update_user(@Param('id',ParseIntPipe) id: string, @Body() dto: UpdateUserDto, ) {
     return await this.usersService.update_user(id, dto);
   }
 
   @Delete('delete_user/:id')
   @UseGuards(JwtAuthGuard)
-  async delete_user(@Param('id') id: string) {
+  async delete_user(@Param('id',ParseIntPipe) id: string) {
     console.log(id);
     return await this.usersService.delete_user(id);
   }
@@ -52,6 +56,10 @@ export class UsersController {
     return await this.usersService.login_user(dto);
   }
   
+  @Post('/refresh')
+  async refresh(@Body() dto: RefreshDto){
+    return await this.usersService.refresh_token(dto)
+  }
 }
 
 

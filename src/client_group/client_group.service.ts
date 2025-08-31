@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ClientGroupEntity } from './client_group.entity/client_group.entity';
 import { UpdateClientGroupDto } from './client_group.dto/updateClient_group.dto';
 import { User } from '../users/entities/users.entity'
-
+import { ClientGroupFilterDto } from './client_group.dto/clientDroupFilterDto'
 
 @Injectable()
 export class ClientGroupService {
@@ -18,16 +18,40 @@ export class ClientGroupService {
     async addClientGroup( dto: DTOClientGroup, created_user) {
         const existingClientGroup = await this.clientGroupRepository.findOne({ where: { name: dto.name } });
         const creat_user = await this.userEntity.findOne({where:{id:Number(created_user)}})
-        if (!existingClientGroup) { throw new NotFoundException('Client group with this name founded')}
+        if (existingClientGroup) { throw new NotFoundException('Client group with this name founded')}
         if(!creat_user){throw new NotFoundException('created user not founded')}
         const newClientGroup = this.clientGroupRepository.create({name: dto.name, register: creat_user });
         await this.clientGroupRepository.save(newClientGroup);
-        return { message: 'Client Group added successfully' };
+        return newClientGroup
         }
     
 
-    async getAllClientGroups() {
-        return await this.clientGroupRepository.find();
+    async getAllClientGroups(dto: ClientGroupFilterDto) {
+        const where: any = {}
+        if(dto.name){where.name = dto.name}
+        if(dto.status!==undefined){}
+        
+        if(dto.created_from && dto.created_to){}
+        else if(dto.created_from && !dto.created_to){}
+        else if(!dto.created_from && dto.created_to){}
+        
+        
+        const page = dto.page && dto.page > 0 ? dto.page : 1;
+        const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
+        
+        
+        const [all_clientGroups, total] =  await this.clientGroupRepository.findAndCount({where, 
+            relations: ['register', 'modify'],
+            skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }});
+        
+            const map = all_clientGroups.map(
+            clientgroup => ({
+                register_id: clientgroup.register?.id ?? null,
+                modify_id: clientgroup.modify?.id ?? null,
+                ...clientgroup,
+        })
+        )
+        return {total, map}
     }
     
     async updateClientGroup(id: string, dto: UpdateClientGroupDto, updated_user) {
@@ -36,7 +60,7 @@ export class ClientGroupService {
         if(!update_user){throw new NotFoundException("created user not found")}
         if (!updateclient_group) {throw new Error(`Client Group with id=${id} not found`);}
         
-        if(dto.name){updateclient_group.name = dto.name}
+        if(dto.name!==undefined){updateclient_group.name = dto.name}
         if(dto.status !== undefined ){updateclient_group.status}
         updateclient_group.modify = update_user
         return this.clientGroupRepository.save(updateclient_group);
@@ -48,7 +72,7 @@ export class ClientGroupService {
         if (!clientGroup) {
             throw new NotFoundException("created user not found")
         }
-        await this.clientGroupRepository.remove(clientGroup);
+        await this.clientGroupRepository.update(clientGroup.id, {status: 0});
         return { message: 'Client Group deleted successfully' };
     }
 }

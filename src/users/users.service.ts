@@ -2,7 +2,7 @@ import { Injectable,  NotFoundException } from '@nestjs/common';
 import { AddUser } from './dto/add_user.dto';
 import { LoginUser } from './dto/login_user.dto';
 import { User } from './entities/users.entity';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { RoleEntity } from '../user_role/user_role.entity/role.entity';
@@ -10,7 +10,9 @@ import { UpdateUserDto } from './dto/update_user.dto';
 import { FileService } from './uploadPhoto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common'
-
+import * as jwt from 'jsonwebtoken';
+import { RefreshDto } from './dto/refresh.dto';
+import { UserFilterDto } from './dto/userFilterDTO'
 
 
 
@@ -29,75 +31,63 @@ export class UsersService  {
     async add_user(dto: AddUser) {
         const user = await this.userRepository.findOne({ where: { user_name: dto.username } })
         //console.log(user)
-        if (user){
-             throw new BadRequestException('Username already exists');
-        }else{
-            const role = await this.roleEntity.findOne({ where: { id: dto.role_id } });
-            if (!role) {
-                throw new BadRequestException('Role not found');
-}
-    const newUser = this.userRepository.create({name: dto.name, user_name: dto.username, password: dto.password, role: role, 
-    phone: dto.phone, chat_id: dto.chat_id});
+        if (user){throw new BadRequestException('Username already exists')}
+        const role = await this.roleEntity.findOne({ where: { id: dto.role_id } });
+        if (!role) {throw new BadRequestException('Role not found');}
+    const newUser = this.userRepository.create({name: dto.name, user_name: dto.username, password: dto.password, role: role, chat_id: dto.chat_id});
     if(dto.photo){
-        const name_photo = await this.fileService.downloadAndSavePhoto(dto.photo)
-        newUser.photo = name_photo;
+        newUser.photo = dto.photo;
     }
     await this.userRepository.save(newUser);
             const body = {id: newUser.id, name: newUser.name, username: newUser.user_name, phone: newUser.phone,
-                role_id: newUser.role.id, role: newUser.role, status: newUser.status, created: newUser.createdAt, photo: newUser.photo,
-                service: newUser.services}
+                role_id: newUser.role.id, status: newUser.status, created: newUser.createdAt, photo: `http://192.168.3.124:3000/${newUser.photo}`,
+                service: newUser.services, role: newUser.role}
             return   body
         }
-}
-
-async login_user(dto: LoginUser) {
-    const user = await this.userRepository.findOne({ where: { user_name: dto.userName, password: dto.password, }, relations: ['role'] });
-
-    if (user) {
-        const jwt_token = await this.validateUser(user.id, user.role?.id);
-        return jwt_token
-    } else {
-        throw new HttpException('Invalid credentials', HttpStatus.CONFLICT);
-    }
-}
-
-async validateUser(id: number, role_id?: number) {
-        
-    const accessToken = this.jwtService.sign({ id, role_id }, { secret: process.env.ACCESS_TOKEN, expiresIn: '15m' });
-
-    const refreshToken = this.jwtService.sign({ id, role_id }, { secret: process.env.REFRESH_TOKEN,  expiresIn: '7d' });
-    
-    return {
-      message: 'Login successful',
-      accessToken,
-      refreshToken,
-    };
-      
-    }
 
 
+async get_all_user(dto: UserFilterDto) {
 
+    const where: any = {}
+    if(dto.name){where.name = Like(`${dto.name}%`)}
+    if(dto.user_name){where.user_name = Like(`${dto.user_name}%`)}
+    if(dto.phone){where.phone = Like(`${dto.phone}%`)}
+    if(dto.role_id){where.role = {id: Number(dto.role_id)}}
+    if(dto.status!==undefined){where.status = Number(dto.status)}
 
-async get_all_user() {
-    const users = await this.userRepository.find({select: ["id", "name", "user_name", "phone", "role", "status", "photo", "createdAt", "updatedAt", "services", "ownedDepartaments", "registeredClients" ]});
-    console.log(users)
-    const map = users.map(user => ({...user, role_id: user.role?.id ?? null, photoUrl: user.photo ? `http://localhost:3000/${user.photo}` : null,
+    if(dto.created_from && dto.created_to){
+        where.createdAt = Between(new Date(dto.created_from), new Date(dto.created_to))
+    }else if(!dto.created_from && dto.created_to){
+        where.createdAt = LessThanOrEqual(new Date(dto.created_to))
+    }else if(dto.created_from && !dto.created_to){
+        where.createdAt = MoreThanOrEqual(new Date(dto.created_from))}
+
+    const page = dto.page && dto.page > 0 ? dto.page : 1;
+    const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
+
+    const [users, total] = await this.userRepository.findAndCount({where,
+        select: ["id", "name", "user_name", "phone", "role", "status", "photo", "createdAt", "updatedAt", "services", "ownedDepartaments", "registeredClients" ],
+        skip: (page - 1) * limit, take: limit, order: { createdAt: 'DESC' }});
+    const map = users.map(user => ({...user, role_id: user.role?.id ?? null, photoUrl: user.photo ? `http://192.168.3.124:3000/${user.photo}` : null,
     }));
 
-    return map
+    return {map, total}
     
 }
 
 async update_user(id: string, dto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({ where: { id: Number(id) } });
+    const user = await this.userRepository.findOne({ where: { id: Number(id) } })
    if (!user) {throw new NotFoundException(`User with id=${id} not found`)}
-    if(dto.name){user.name = dto.name}
-    if(dto.user_name){user.user_name = dto.user_name}
-    if(dto.password){user.password = dto.password}
-    if(dto.phone){user.phone = dto.phone}
-    if(dto.photo){user.photo = await this.fileService.downloadAndSavePhoto(dto.photo)}
-    if(dto.status){user.status = dto.status}
-    if(dto.role_id){
+    if(dto.name!==undefined){user.name = dto.name}
+    if(dto.user_name!==undefined){
+        const find_username = await this.userRepository.findOne({where: {name: dto.user_name}})
+        if (find_username){throw new NotFoundException('User with this username founded')}
+        user.user_name = dto.user_name}
+    if(dto.password!==undefined){user.password = dto.password}
+    if(dto.phone!==undefined){user.phone = dto.phone}
+    if(dto.photo!==undefined){user.photo = await this.fileService.downloadAndSavePhoto(dto.photo)}
+    if(dto.status!==undefined){user.status = dto.status}
+    if(dto.role_id!==undefined){
         const role = await this.roleEntity.findOne({where: {id: Number(dto.role_id)}})
         if(!role){throw new NotFoundException('Role not found')}
         user.role = role
@@ -110,23 +100,30 @@ async update_user(id: string, dto: UpdateUserDto) {
 
 async delete_user(id: string) {
     const user = await this.userRepository.findOne({ where: { id: Number(id) } });
-    if (user) {
-        await this.userRepository.remove(user);
-        return { message: 'User deleted successfully' };
-    } else {
-        throw new HttpException('Invalid credentials', HttpStatus.CONFLICT);
-    }
+    if (!user) {throw new HttpException('user with this id not found', HttpStatus.CONFLICT)}
+    
+    await this.userRepository.update(user.id, {status: 0});
+    return { message: 'User deleted successfully' };
+   
 }
 
-// async refresh_token(refreshToken ) { 
-//         const decoded: any = jwt.verify(refreshToken, process.env.REFRESH_TOKEN as string);
-//         if (!decoded) {
-//             return { message: 'Invalid refresh token' };
-//         }
-//         const new_access_token = this.jwtService.sign({ id: decoded.id, role_id: decoded.role_id }, { secret: process.env.ACCESS_TOKEN, expiresIn: '15m' });
-//         return {
-//             message: 'Token refreshed successfully',
-//             accessToken: new_access_token
-//         };
-// }
+
+async login_user(dto: LoginUser) {
+    const user = await this.userRepository.findOne({ where: { user_name: dto.userName, password: dto.password, }, relations: ['role'] });
+    if (!user) {throw new NotFoundException('user not found')}
+        
+    const accessToken = this.jwtService.sign({ userId: user.id, role_name: user.role.name }, { secret: process.env.ACCESS_TOKEN, expiresIn: '60m' });
+    const refreshToken = this.jwtService.sign({ userId: user.id, role_name: user.role.name }, { secret: process.env.REFRESH_TOKEN,  expiresIn: '7d' });
+    user.refresh_token = refreshToken
+    await this.userRepository.save(user)
+        return  {accessToken: accessToken, refreshToken: refreshToken}
+   
+}
+
+async refresh_token(dto: RefreshDto ) { 
+        const decoded: any = jwt.verify(dto.refresh, process.env.REFRESH_TOKEN as string);
+        if (!decoded) {return { message: 'Invalid refresh token' }}
+        const new_access_token = this.jwtService.sign({ userId: decoded.userId, role_name: decoded.role_name }, { secret: process.env.ACCESS_TOKEN, expiresIn: '60m' });
+        return {accessToken: new_access_token}
+}
 }

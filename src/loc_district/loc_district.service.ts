@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit, NotFoundException} from '@nestjs/common';
 import { DTOlocDistrict } from './loc_district.dto/loc_district.dto';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { loc_districtEntitiy } from './loc_district.entity/loc_district.entity';
 import { loc_regionEntitiy } from 'src/loc_region/loc_region.entity/loc_region.entity';
 import { Updateloc_districtDto } from './loc_district.dto/update_loc_district.dto';
-
+import { LocDistrictFilterDto } from './loc_district.dto/loc_districtFilter.dto'
 
 
 @Injectable()
@@ -34,26 +34,58 @@ export class LocDistrictService implements OnModuleInit{
     async addLocDistrict(dto: DTOlocDistrict) {
         const existingLocDistrict = await this.locDistrictEntity.findOne({ where: { name: dto.name } });
         const loc_region = await this.locRegionEntity.findOne({where:{id:Number(dto.region_id)}})
-        if (!existingLocDistrict) {throw new NotFoundException('loc_region with this name founded')}
+        if (existingLocDistrict) {throw new NotFoundException('loc_region with this name founded')}
         if (!loc_region){throw new NotFoundException("loc_region not found")}
         const newLocDistrict = await this.locDistrictEntity.create({name: dto.name, region:loc_region });
             await this.locDistrictEntity.save(newLocDistrict);
-            return { message: 'Location District added successfully', newLocDistrict };
+            return newLocDistrict 
         }
 
 
-async getAllLocDistricts() {
-    return await this.locDistrictEntity.find({ relations: ['region'] });        
+async getAllLocDistricts(dto: LocDistrictFilterDto) {
+    
+    const where: any = {}
+
+    if(dto.name){where.name = Like(`${dto.name}%`)}
+    if(dto.status!==undefined){}
+    if(dto.region_id){where.region = {id: Number(dto.region_id)}}
+    
+    if(dto.created_from && dto.created_to){
+        where.created = Between(new Date(dto.created_from), new Date(dto.created_to))
+    }else if(!dto.created_from && dto.created_to){
+        where.created = LessThanOrEqual(new Date(dto.created_to))
+    }else if(dto.created_from && !dto.created_to){
+        where.created = MoreThanOrEqual(new Date(dto.created_from))}
+    
+    const page = dto.page && dto.page > 0 ? dto.page : 1;
+    const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
+
+    const [all_districts, total] = await this.locDistrictEntity.findAndCount({where,
+         relations: ['region'],
+         skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }});
+    
+    
+    const map = all_districts.map(
+    district => ({
+        region_id: district.region?.id ?? null,
+        ...district
+        })
+    )
+    return {total, map}        
 }
 
 async updateLocDistrict(id: string, dto: Updateloc_districtDto) {
     const locDistrict = await this.locDistrictEntity.findOne({ where: { id: Number(id) } });
-    const region = await this.locRegionEntity.findOne({where:{id: dto.region_id}})
-    if (!region){throw new NotFoundException("region not found")}
     if (!locDistrict) {throw new NotFoundException('Location District not found');}
     
-    if(dto.name){locDistrict.name = dto.name}
-    if(dto.region_id){locDistrict.region = region}
+    if(dto.name!==undefined){
+        const ex = await this.locDistrictEntity.findOne({where:{name: dto.name}})
+        if(ex){throw new NotFoundException('district with this name founded')}
+        locDistrict.name = dto.name}
+    if(dto.region_id!==undefined){
+        const region = await this.locRegionEntity.findOne({where:{id: dto.region_id}})
+        if (!region){throw new NotFoundException("region not found")}
+        locDistrict.region = region}
     if(dto.status !== undefined){locDistrict.status = dto.status}
 
     return await this.locDistrictEntity.save(locDistrict)
@@ -64,7 +96,7 @@ async deleteLocDistrict(id: string) {
     if (!locDistrict) {
         throw new NotFoundException("District not found")
     }
-    await this.locDistrictEntity.remove(locDistrict);
+    await this.locDistrictEntity.update(locDistrict.id, {status: 0});
     return { message: 'Location District deleted successfully' };
 }
 }

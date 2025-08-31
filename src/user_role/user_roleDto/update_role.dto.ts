@@ -12,7 +12,7 @@ export class UpdateRoleDto {
   @Length(1, 255)
   name?: string;
 
-  @IsOptional()
+  @ApiProperty()
   @IsOptional()
   @IsNumber()
   status?: number;

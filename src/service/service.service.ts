@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { ServiceEntity } from './service_entity/service.entity';
 import { DTOService } from './serviсe.dto/serviceDTO';
 import { UpdateServiceDto } from './serviсe.dto/update_service.dto';
 import { User } from '../users/entities/users.entity'
 import { BadRequestException } from '@nestjs/common'
 import { DepartamentEntity } from '../departament/deportament_entity/deportament.entity'
-
+import { FilterServiceDTO } from './serviсe.dto/serviceFilter.dto'
 
 @Injectable()
 export class ServiceService {
@@ -22,13 +22,12 @@ export class ServiceService {
 
     async add_service(dto: DTOService, registered_id) {
         const existingService = await this.serviceEntity.findOne({ where: { name: dto.name } });
-        if (existingService) {
-            throw new BadRequestException('Service already exists' );
-        } else {
-            const registered_user = await this.userEntity.findOne({ where: {id: Number(registered_id)} })
-            const departament = await this.departamentEntity.findOne({where: {id:dto.departament_id }})
-            
-            if (!departament || !registered_user){throw new NotFoundException('departament or Register user not found') }
+        if (existingService) {throw new BadRequestException('Service already exists' )}
+        
+        const registered_user = await this.userEntity.findOne({ where: {id: Number(registered_id)} })
+        if(!registered_user){throw new NotFoundException("registerid_user not found")}
+        const departament = await this.departamentEntity.findOne({where: {id:dto.departament_id }})
+        if (!departament ){throw new NotFoundException('departament id not found') }
             const newService = this.serviceEntity.create({
                 name: dto.name,
                 price: dto.price,
@@ -36,21 +35,60 @@ export class ServiceService {
                 register: registered_user 
             });
             await this.serviceEntity.save(newService);
-            return { message: 'Service added successfully', service: newService };
+            return newService 
         }
-    }
+    
 
-    async get_all_services() {
-        return await this.serviceEntity.find({relations: ['departament', 'modify', 'register']});
+    async get_all_services(dto: FilterServiceDTO) {
+        
+        const where: any = {}
+
+        if(dto.name){where.name = Like(`${dto.name}%`)}
+
+        if(dto.price_min !== undefined && Number(dto.price_max) !== undefined){
+            where.price = Between(Number(dto.created_from), Number(dto.created_to))
+        }else if(dto.price_min !==undefined && dto.price_max === undefined){
+            where.price = MoreThanOrEqual(Number(dto.price_min))
+        }else if(dto.price_min === undefined && dto.price_max !==undefined){
+            where.balance = LessThanOrEqual(Number(dto.price_max))}
+
+        if(dto.departament_id){where.departament = {id: Number(dto.departament_id)}}        
+        if(dto.status!==undefined){where.status = Number(dto.status)}
+        
+        if(dto.created_from && dto.created_to){
+            where.created = Between(new Date(dto.created_from), new Date(dto.created_to))
+        }else if(!dto.created_from && dto.created_to){
+            where.created = LessThanOrEqual(new Date(dto.created_to))
+        }else if(dto.created_from && !dto.created_to){
+            where.created = MoreThanOrEqual(new Date(dto.created_from))}
+        
+            
+        const page = dto.page && dto.page > 0 ? dto.page : 1;
+        const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
+
+        const [all_services, total] = await this.serviceEntity.findAndCount({where, 
+            relations: ['departament', 'modify', 'register'],
+            skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }});
+
+        const map = all_services.map(service =>({...service, 
+            departament_id: service.departament?.id ?? null,
+            modify_id: service.modify?.id ?? null,
+            register_id: service.register?.id ?? null}))
+        
+        return {map, total}
     }
 
     async update_service(id: string, dto: UpdateServiceDto, updated_user_id) {
 
         const service = await this.serviceEntity.findOne({where: {id: Number(id)}})
+        if (!service ){throw new NotFoundException(`service not found`)}
         const updated_user = await this.userEntity.findOne({where:{id: Number(updated_user_id)}})
-        console.log(service, updated_user)
-        if (!service || !updated_user){throw new NotFoundException(`service or updated_user not found`)}
-        if(dto.name){service.name = dto.name}
+        if (!updated_user ){throw new NotFoundException(`updated user not found`)}
+        //console.log(service, updated_user)
+        if(dto.name){
+            const ex = await this.serviceEntity.findOne({where:{name: dto.name}})
+            if(ex){throw new NotFoundException('service with this name founded')}
+            service.name = dto.name}
         if(dto.price !==undefined){service.price = dto.price}
         if(dto.status !==undefined){service.status = dto.status}
         if(dto.departament_id){
@@ -60,8 +98,9 @@ export class ServiceService {
         }
         service.modify = updated_user
 
-        await this.serviceEntity.save(service)
-        return {message: 'service updated'}
+        
+        return await this.serviceEntity.save(service)
+    
         
     }
 
@@ -70,7 +109,7 @@ export class ServiceService {
         if (!user) {
             throw new NotFoundException(`service not found`)
         }
-        await this.serviceEntity.remove(user);
+        await this.serviceEntity.update(user.id, {status: 0});
         return { message: 'User deleted successfully' };
     }
 }
