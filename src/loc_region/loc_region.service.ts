@@ -40,15 +40,28 @@ export class LocRegionService implements OnModuleInit {
     async getAllLocRegions(dto: LocRegionFilterDto) {
         
         const where: any = {}
-        if(dto.name){where.name = Like(`${dto.name}%`)}
-        if(dto.status !== 0){where.status = Number(dto.status)}
+        if(dto.name){where.name = Like(`%${dto.name}%`)}
+        if(dto.status !== undefined){where.status = Number(dto.status)}
         
         if(dto.created_from && dto.created_to){
-            where.created = Between(new Date(dto.created_from), new Date(dto.created_to))
-        }else if(!dto.created_from && dto.created_to){
-            where.created = LessThanOrEqual(new Date(dto.created_to))
-        }else if(dto.created_from && !dto.created_to){
-            where.created = MoreThanOrEqual(new Date(dto.created_from))}
+        
+        const toDate = new Date(dto.created_to);
+        const fromDate = new Date(dto.created_from)
+        toDate.setHours(23, 59, 59, 999)
+        fromDate.setHours(0, 0, 0, 0)
+        
+        where.created = Between(fromDate, toDate )
+    }else if(!dto.created_from && dto.created_to){
+        
+        const toDate = new Date(dto.created_to);
+        toDate.setHours(23, 59, 59, 999)
+
+        where.created = LessThanOrEqual(toDate)
+    }else if(dto.created_from && !dto.created_to){
+        
+        const fromDate = new Date(dto.created_from)
+        fromDate.setHours(0, 0, 0, 0)
+        where.created = MoreThanOrEqual(fromDate)}
             
         const page = dto.page && dto.page > 0 ? dto.page : 1;
         const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;

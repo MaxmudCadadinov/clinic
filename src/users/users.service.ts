@@ -56,11 +56,24 @@ async get_all_user(dto: UserFilterDto) {
     if(dto.status!==undefined){where.status = Number(dto.status)}
 
     if(dto.created_from && dto.created_to){
-        where.createdAt = Between(new Date(dto.created_from), new Date(dto.created_to))
+        
+        const toDate = new Date(dto.created_to);
+        const fromDate = new Date(dto.created_from)
+        toDate.setHours(23, 59, 59, 999)
+        fromDate.setHours(0, 0, 0, 0)
+        
+        where.createdAt = Between(fromDate, toDate )
     }else if(!dto.created_from && dto.created_to){
-        where.createdAt = LessThanOrEqual(new Date(dto.created_to))
+        
+        const toDate = new Date(dto.created_to);
+        toDate.setHours(23, 59, 59, 999)
+
+        where.createdAt = LessThanOrEqual(toDate)
     }else if(dto.created_from && !dto.created_to){
-        where.createdAt = MoreThanOrEqual(new Date(dto.created_from))}
+        
+        const fromDate = new Date(dto.created_from)
+        fromDate.setHours(0, 0, 0, 0)
+        where.createdAt = MoreThanOrEqual(fromDate)}
 
     const page = dto.page && dto.page > 0 ? dto.page : 1;
     const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;

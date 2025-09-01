@@ -2,6 +2,7 @@ import { IsOptional, IsString, IsInt, IsDateString, Min } from 'class-validator'
 import { Type } from 'class-transformer';
 import { PaginationDto } from 'src/paginationDTO';
 
+
 export class ClientGroupFilterDto extends PaginationDto{
 
   @IsOptional()

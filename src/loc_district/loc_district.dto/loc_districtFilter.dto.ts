@@ -3,6 +3,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { PaginationDto } from '../../paginationDTO';
 
+
 export class LocDistrictFilterDto extends PaginationDto {
 
   @ApiPropertyOptional({ description: 'Название района (LIKE)' })

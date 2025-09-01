@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DTOClientGroup } from './client_group.dto/client_group.dto';
-import { Repository } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, Like} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientGroupEntity } from './client_group.entity/client_group.entity';
 import { UpdateClientGroupDto } from './client_group.dto/updateClient_group.dto';
@@ -28,12 +28,28 @@ export class ClientGroupService {
 
     async getAllClientGroups(dto: ClientGroupFilterDto) {
         const where: any = {}
-        if(dto.name){where.name = dto.name}
-        if(dto.status!==undefined){}
+        if(dto.name){where.name = Like(`%${dto.name}%`)}
+        if(dto.status!==undefined){where.status = Number(dto.status)}
         
-        if(dto.created_from && dto.created_to){}
-        else if(dto.created_from && !dto.created_to){}
-        else if(!dto.created_from && dto.created_to){}
+        if(dto.created_from && dto.created_to){
+                
+                const toDate = new Date(dto.created_to);
+                const fromDate = new Date(dto.created_from)
+                toDate.setHours(23, 59, 59, 999)
+                fromDate.setHours(0, 0, 0, 0)
+                
+                where.created = Between(fromDate, toDate )
+            }else if(!dto.created_from && dto.created_to){
+                
+                const toDate = new Date(dto.created_to);
+                toDate.setHours(23, 59, 59, 999)
+        
+                where.created = LessThanOrEqual(toDate)
+            }else if(dto.created_from && !dto.created_to){
+                
+                const fromDate = new Date(dto.created_from)
+                fromDate.setHours(0, 0, 0, 0)
+                where.created = MoreThanOrEqual(fromDate)}
         
         
         const page = dto.page && dto.page > 0 ? dto.page : 1;

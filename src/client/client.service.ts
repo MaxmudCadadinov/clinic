@@ -79,9 +79,9 @@ if (dto.district_id) {
 
     async get_all_clients(dto: ClientFilterDto ) {
         const where: any = {}
-        if(dto.name){where.name = Like(`${dto.name}%`) }
+        if(dto.name){where.name = Like(`%${dto.name}%`) }
         if(dto.phone){where.phone = dto.phone}
-        if(dto.group_id){where.group_id = {id: Number(dto.group_id)}}
+        if(dto.group_id){where.group = {id: Number(dto.group_id)}}
         if(dto.gender){where.gender = dto.gender}
         
         if(!dto.birthday_from && dto.birthday_to){
@@ -103,15 +103,27 @@ if (dto.district_id) {
         }
 
         if(dto.source_id){where.source = {id:Number(dto.source_id)}}
-        if(dto.status){where.status = Number(dto.status)}
+        if(dto.status!==undefined){where.status = Number(dto.status)}
         
-        if(!dto.created_from && dto.created_to){
-            where.created = LessThanOrEqual(new Date(dto.created_to))
-        }else if(dto.created_from && !dto.created_to){
-            where.created = MoreThanOrEqual(new Date(dto.created_from))
-        }else if(dto.created_from && dto.created_to){
-            where.created = Between(new Date(dto.created_from), new Date(dto.created_to))
-        }
+        if(dto.created_from && dto.created_to){
+        
+        const toDate = new Date(dto.created_to);
+        const fromDate = new Date(dto.created_from)
+        toDate.setHours(23, 59, 59, 999)
+        fromDate.setHours(0, 0, 0, 0)
+        
+        where.created = Between(fromDate, toDate )
+    }else if(!dto.created_from && dto.created_to){
+        
+        const toDate = new Date(dto.created_to);
+        toDate.setHours(23, 59, 59, 999)
+
+        where.created = LessThanOrEqual(toDate)
+    }else if(dto.created_from && !dto.created_to){
+        
+        const fromDate = new Date(dto.created_from)
+        fromDate.setHours(0, 0, 0, 0)
+        where.created = MoreThanOrEqual(fromDate)}
 
         const page = dto.page && dto.page > 0 ? dto.page : 1;
         const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;

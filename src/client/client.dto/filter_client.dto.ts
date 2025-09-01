@@ -2,6 +2,7 @@ import { IsOptional, IsString, IsNumber, IsEnum, IsDateString } from 'class-vali
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { clientType } from '../client.entity/client.entity'
 import { PaginationDto } from '../../paginationDTO'
+import { Type } from 'class-transformer';
 
 
 export class ClientFilterDto extends PaginationDto{
@@ -19,6 +20,7 @@ export class ClientFilterDto extends PaginationDto{
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   group_id?: number;
 
   @ApiPropertyOptional()
@@ -39,32 +41,38 @@ export class ClientFilterDto extends PaginationDto{
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   region_id?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   district_id?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   balance_min?: number; // диапазон баланса
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   balance_max?: number;
 
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   source_id?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   status?: number;
 
   @ApiPropertyOptional()

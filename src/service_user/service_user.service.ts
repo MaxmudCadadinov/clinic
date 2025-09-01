@@ -40,15 +40,29 @@ constructor(
         if(dto.service_id){where.service = {id: Number(dto.service_id)}}
         if(dto.register_id){where.register = {id: Number(dto.register_id)}}
         if(dto.modify_id){where.modify = {id: Number(dto.modify_id)}}
-        if(dto.status!==undefined){where.status = dto.status}
+        if(dto.status!==undefined){where.status = Number(dto.status)}
         if(dto.type){where.type = dto.type}
         if(dto.value!==undefined){where.value = dto.value}
-        if (dto.created_from && dto.created_to) {
-            where.created = Between(new Date(dto.created_from), new Date(dto.created_to))}
-        if (dto.created_from && !dto.created_to) {
-            where.created = MoreThanOrEqual(new Date(dto.created_from))}
-        if (!dto.created_from && dto.created_to) {
-            where.created = LessThanOrEqual(new Date(dto.created_to))}
+        
+        if(dto.created_from && dto.created_to){
+        
+        const toDate = new Date(dto.created_to);
+        const fromDate = new Date(dto.created_from)
+        toDate.setHours(23, 59, 59, 999)
+        fromDate.setHours(0, 0, 0, 0)
+        
+        where.created = Between(fromDate, toDate )
+    }else if(!dto.created_from && dto.created_to){
+        
+        const toDate = new Date(dto.created_to);
+        toDate.setHours(23, 59, 59, 999)
+
+        where.created = LessThanOrEqual(toDate)
+    }else if(dto.created_from && !dto.created_to){
+        
+        const fromDate = new Date(dto.created_from)
+        fromDate.setHours(0, 0, 0, 0)
+        where.created = MoreThanOrEqual(fromDate)}
 
         const page = dto.page && dto.page > 0 ? dto.page : 1;
         const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
@@ -57,7 +71,15 @@ constructor(
         relations: ['user', 'service', 'register', 'modify'], 
         skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }});
 
-        return {all_service_users, total}
+        const mapped = all_service_users.map(su => ({
+        ...su,
+        user_id: su.user?.id ?? null,
+        service_id: su.service?.id ?? null,
+        register_id: su.register?.id ?? null,
+        modify_id: su.modify?.id ?? null,
+}));
+
+        return {service_users: mapped, total}
     }
 
     async updateServiceUser(id: string, dto: UpdateUserServiceDto, updated_id) {
