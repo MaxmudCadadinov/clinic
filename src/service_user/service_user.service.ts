@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DTOServiceUSer } from './serviceUser.dto/serviceUser.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ServiceUserEntity } from './service_user.entity/service_user.entity';
-import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { UpdateUserServiceDto } from './serviceUser.dto/update_service_user.dto';
 import { User } from '../users/entities/users.entity'
 import { ServiceEntity } from '../service/service_entity/service.entity'
@@ -40,7 +40,8 @@ constructor(
         if(dto.service_id){where.service = {id: Number(dto.service_id)}}
         if(dto.register_id){where.register = {id: Number(dto.register_id)}}
         if(dto.modify_id){where.modify = {id: Number(dto.modify_id)}}
-        if(dto.status!==undefined){where.status = Number(dto.status)}
+        if(dto.status!==undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         if(dto.type){where.type = dto.type}
         if(dto.value!==undefined){where.value = dto.value}
         

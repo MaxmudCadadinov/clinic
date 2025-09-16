@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, } from '@nestjs/common';
 import { DTODepartament } from './departament_dto/departament.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DepartamentEntity } from './deportament_entity/deportament.entity';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { UpdateDeportamentDto } from './departament_dto/update_departament.dto';
 import { User } from '../users/entities/users.entity'
 import { BadRequestException } from '@nestjs/common'
@@ -50,9 +50,10 @@ export class DepartamentService {
     async get_all_departaments(dto: FilterDepartamentDto) {
         
     const where: any = {}  
-    if(dto.name){where.name = Like(`${dto.name}%`)}
+    if(dto.name){where.name = Like(`%${dto.name}%`)}
     if(dto.owner_id){where.owner = {id: Number(dto.owner_id)}}
-    if(dto.status!==undefined){where.status = Number(dto.status)}
+    if(dto.status!==undefined){where.status = Number(dto.status)
+    }else {where.status = Not(0)}
     
     if(dto.created_from && dto.created_to){
         
@@ -93,9 +94,8 @@ export class DepartamentService {
 
     async update_departament(id: string, dto: UpdateDeportamentDto, user) {
         const departament = await this.departamentRepository.findOne({ where: { id: Number(id) } });
+        if (!departament) {throw new NotFoundException(`departament with id=${id} not found`);}
         const modified_user = await this.userEntity.findOne({where: {id: Number(user)}})
-        
-        if (!departament) {throw new NotFoundException(`User with id=${id} not found`);}
         if (!modified_user){throw new NotFoundException(`modified not found`);}
         
         if (dto.name!==undefined){
@@ -108,6 +108,7 @@ export class DepartamentService {
             departament.owner = owner_id
         }
         if (dto.status !== undefined ){departament.status = dto.status}
+        departament.updated = new Date()
         departament.modify = modified_user
 
         return await this.departamentRepository.save(departament)

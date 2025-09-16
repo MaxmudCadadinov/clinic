@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { DepartamentEntity } from '../../departament/deportament_entity/deportament.entity';
 import { User } from 'src/users/entities/users.entity';
 import { ServiceUserEntity } from 'src/service_user/service_user.entity/service_user.entity';
-
+import { VisitReferalEntity } from 'src/visit_referal/visit_referal.entity';
 
 
 @Entity('service')
@@ -16,6 +16,9 @@ export class ServiceEntity{
 
     @Column({ type: 'double' })
     price: number;
+
+    @Column({type: 'int', default: 0})
+    has_file: number
 
     @ManyToOne (() => DepartamentEntity, (departament) => departament.services)
     @JoinColumn({ name: 'departament_id' })
@@ -41,7 +44,8 @@ export class ServiceEntity{
     @OneToMany(() => ServiceUserEntity, (su) => su.service)
     serviceUsers: ServiceUserEntity[];
 
-
+    @OneToMany(() => VisitReferalEntity, (vr) => vr.service)
+    visitReferals: VisitReferalEntity[];
 
 }
 

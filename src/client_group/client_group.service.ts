@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DTOClientGroup } from './client_group.dto/client_group.dto';
-import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, Like} from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, Like, Not} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClientGroupEntity } from './client_group.entity/client_group.entity';
 import { UpdateClientGroupDto } from './client_group.dto/updateClient_group.dto';
@@ -29,7 +29,8 @@ export class ClientGroupService {
     async getAllClientGroups(dto: ClientGroupFilterDto) {
         const where: any = {}
         if(dto.name){where.name = Like(`%${dto.name}%`)}
-        if(dto.status!==undefined){where.status = Number(dto.status)}
+        if(dto.status!==undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         
         if(dto.created_from && dto.created_to){
                 
@@ -72,13 +73,17 @@ export class ClientGroupService {
     
     async updateClientGroup(id: string, dto: UpdateClientGroupDto, updated_user) {
         const updateclient_group = await this.clientGroupRepository.findOne({ where: { id: Number(id) } });
+        if (!updateclient_group) {throw new NotFoundException(`Client Group with id=${id} not found`);}
         const update_user = await this.userEntity.findOne({where: {id: Number(updated_user)}})
         if(!update_user){throw new NotFoundException("created user not found")}
-        if (!updateclient_group) {throw new Error(`Client Group with id=${id} not found`);}
         
-        if(dto.name!==undefined){updateclient_group.name = dto.name}
+        if(dto.name!==undefined){
+        const ex = await this.clientGroupRepository.findOne({where:{name: dto.name}})
+        if(ex){throw new NotFoundException("usergroup with this name founded")}    
+        updateclient_group.name = dto.name}
         if(dto.status !== undefined ){updateclient_group.status}
         updateclient_group.modify = update_user
+        updateclient_group.updated = new Date()
         return this.clientGroupRepository.save(updateclient_group);
     }
 

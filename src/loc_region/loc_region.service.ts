@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
 import { DTOlocRegion } from './loc_region.dto/loc_region.dto';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { loc_regionEntitiy } from './loc_region.entity/loc_region.entity';
 import { UpdateRegionDto } from './loc_region.dto/update_loc_region.dto';
@@ -41,7 +41,8 @@ export class LocRegionService implements OnModuleInit {
         
         const where: any = {}
         if(dto.name){where.name = Like(`%${dto.name}%`)}
-        if(dto.status !== undefined){where.status = Number(dto.status)}
+        if(dto.status !== undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         
         if(dto.created_from && dto.created_to){
         

@@ -1,9 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany} from 'typeorm';
 import { SourceEntity } from '../../source/source.entity/source.entity';
 import { User } from '../../users/entities/users.entity';
 import { ClientGroupEntity } from '../../client_group/client_group.entity/client_group.entity'; // Adjust the import path as necessary
 import { loc_regionEntitiy } from '../../loc_region/loc_region.entity/loc_region.entity';
 import { loc_districtEntitiy } from 'src/loc_district/loc_district.entity/loc_district.entity';
+import { VisitRoomEntity } from 'src/visit_room/visit_room.entity';
+
 
 export enum clientType {
   MALE = 'MALE',
@@ -68,5 +70,9 @@ export class ClientEntity {
   @ManyToOne(() => loc_districtEntitiy, { nullable: true })
   @JoinColumn({ name: 'district_id' })
   district: loc_districtEntitiy;
+
+  @OneToMany(() => VisitRoomEntity, (visitRoom) => visitRoom.client)
+  visitRooms: VisitRoomEntity[];
+
 
 }

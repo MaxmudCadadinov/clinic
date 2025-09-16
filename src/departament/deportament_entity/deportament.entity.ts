@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm'
 import { ServiceEntity } from 'src/service/service_entity/service.entity';
 import { User } from 'src/users/entities/users.entity';
+import { Visit } from 'src/visit/visit.entity';
 
 
 
@@ -38,6 +39,9 @@ export class DepartamentEntity{
     @ManyToOne(() => User, (user) => user.modifiedDepartaments)
     @JoinColumn({ name: 'modify_id' })
     modify: User;
+
+    @OneToMany(() => Visit, (visit) => visit.departament)
+    visits: Visit[]
 
 }
 

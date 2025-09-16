@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { ServiceEntity } from './service_entity/service.entity';
 import { DTOService } from './serviсe.dto/serviceDTO';
 import { UpdateServiceDto } from './serviсe.dto/update_service.dto';
@@ -43,7 +43,7 @@ export class ServiceService {
         
         const where: any = {}
 
-        if(dto.name){where.name = Like(`${dto.name}%`)}
+        if(dto.name){where.name = Like(`%${dto.name}%`)}
 
         if(dto.price_min !== undefined && Number(dto.price_max) !== undefined){
             where.price = Between(Number(dto.price_min), Number(dto.price_max))
@@ -53,7 +53,8 @@ export class ServiceService {
             where.price = LessThanOrEqual(Number(dto.price_max))}
 
         if(dto.departament_id){where.departament = {id: Number(dto.departament_id)}}        
-        if(dto.status!==undefined){where.status = Number(dto.status)}
+        if(dto.status!==undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         
         if(dto.created_from && dto.created_to){
         

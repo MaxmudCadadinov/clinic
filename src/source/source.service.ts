@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DTOSource } from './source.dto/source.dto';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SourceEntity } from './source.entity/source.entity';
 import { UpdateSourceDto } from './source.dto/update_source.dto';
@@ -26,8 +26,10 @@ export class SourceService {
     async getAllSources(dto: SourceFilterDto) {
 
         const where: any = {}
-        if(dto.name){where.name = Like(`${dto.name}%`)}
-        if(dto.status!==undefined){where.status = Number(dto.status)}
+        
+        if(dto.name){where.name = Like(`%${dto.name}%`)}
+        if(dto.status!==undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         
         if(dto.created_from && dto.created_to){
         

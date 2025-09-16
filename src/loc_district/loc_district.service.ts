@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, NotFoundException} from '@nestjs/common';
 import { DTOlocDistrict } from './loc_district.dto/loc_district.dto';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { loc_districtEntitiy } from './loc_district.entity/loc_district.entity';
 import { loc_regionEntitiy } from 'src/loc_region/loc_region.entity/loc_region.entity';
@@ -47,7 +47,8 @@ async getAllLocDistricts(dto: LocDistrictFilterDto) {
     const where: any = {}
 
     if(dto.name){where.name = Like(`%${dto.name}%`)}
-    if(dto.status!==undefined){where.status = Number(dto.status)}
+    if(dto.status!==undefined){where.status = Number(dto.status)
+    }else {where.status = Not(0)}
     if(dto.region_id){where.region = {id: Number(dto.region_id)}}
     
     if(dto.created_from && dto.created_to){

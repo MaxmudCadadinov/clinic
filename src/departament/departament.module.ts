@@ -6,6 +6,7 @@ import { DepartamentEntity } from './deportament_entity/deportament.entity';
 import { User } from '../users/entities/users.entity'
 
 
+
 @Module({
   controllers: [DepartamentController],
   providers: [DepartamentService],

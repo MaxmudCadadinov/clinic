@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClientDto } from './client.dto/client.dto';
 import { UpdateClientDto } from './client.dto/update_client.dto';
 import { ClientEntity } from './client.entity/client.entity';
-import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, Not } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SourceEntity } from '../source/source.entity/source.entity'
 import { User } from '../users/entities/users.entity'
@@ -103,7 +103,8 @@ if (dto.district_id) {
         }
 
         if(dto.source_id){where.source = {id:Number(dto.source_id)}}
-        if(dto.status!==undefined){where.status = Number(dto.status)}
+        if(dto.status!==undefined){where.status = Number(dto.status)
+        }else {where.status = Not(0)}
         
         if(dto.created_from && dto.created_to){
         
@@ -187,6 +188,7 @@ if (dto.district_id) {
             if (!ex){throw new NotFoundException("district_id not found")}
             client.district = ex
         }
+        client.updated = new Date()
         client.modify = modified
         return await this.clientRepository.save(client)
 

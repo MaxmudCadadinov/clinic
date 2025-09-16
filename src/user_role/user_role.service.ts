@@ -48,8 +48,10 @@ async update_role(id: string, dto: UpdateRoleDto) {
 async get_roles(dto: UserRoleFilterDto) {
 
     const where: any = {}
-    if(dto.name){where.name = Like(`${dto.name}%`)}
-    if(dto.status!==undefined){where.status = Number(dto.status)}
+    
+    if(dto.name){where.name = Like(`%${dto.name}%`)}
+    if(dto.status!==undefined){where.status = Number(dto.status)
+    }else {where.status = Not(0)}
 
     if(dto.created_from && dto.created_to){
         

@@ -24,7 +24,7 @@ export class UsersController {
   @Post('/add_user')
   @UseInterceptors(FileInterceptor('photo', multerUserConfig))
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async add_user(@Body() dto: AddUser, @UploadedFile() file?: Express.Multer.File,){
+  async add_user(@Query() dto: AddUser, @UploadedFile() file?: Express.Multer.File,){
 
     if(file){dto.photo = file.path;}
     return await this.usersService.add_user(dto);
@@ -38,7 +38,7 @@ export class UsersController {
 
   @Patch('update_user/:id')
   @UseGuards(JwtAuthGuard)
-  async update_user(@Param('id',ParseIntPipe) id: string, @Body() dto: UpdateUserDto, ) {
+  async update_user(@Param('id',ParseIntPipe) id: string, @Query() dto: UpdateUserDto, ) {
     return await this.usersService.update_user(id, dto);
   }
 

@@ -4,6 +4,11 @@ import { ServiceUserEntity } from 'src/service_user/service_user.entity/service_
 import { DepartamentEntity } from '../../departament/deportament_entity/deportament.entity';
 import { ServiceEntity } from 'src/service/service_entity/service.entity';
 import { ClientEntity } from '../../client/client.entity/client.entity';
+import { ReferalEntity } from 'src/referal/referal.entity';
+import { VisitReferalEntity } from 'src/visit_referal/visit_referal.entity';
+import { VisitRoomEntity } from 'src/visit_room/visit_room.entity';
+
+
 
 @Entity('users')
 
@@ -14,10 +19,10 @@ export class User{
     @Column({ type: 'varchar', length: 255 })
     name: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, nullable: false, })
     user_name: string;
 
-    @Column({ type: 'varchar', length: 500, nullable: true, select: false })
+    @Column({ type: 'varchar', length: 500, nullable: false, select: false })
     password: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
@@ -81,5 +86,25 @@ export class User{
     @OneToMany(() => ClientEntity, (c) => c.modify)
     modifiedClients: ClientEntity[];
 
+    @OneToMany(() => ReferalEntity, (c) => c.register)
+    registeredReferals: ClientEntity[];
+
+    @OneToMany(() => ReferalEntity, (c) => c.modify)
+    modifiedReferals: ClientEntity[];
+
+    @OneToMany(() => VisitReferalEntity, (vr) => vr.register)
+    registeredVisitReferals: VisitReferalEntity[];
+
+    @OneToMany(() => VisitReferalEntity, (vr) => vr.modify)
+    modifiedVisitReferals: VisitReferalEntity[];
+
+    @OneToMany(() => VisitRoomEntity, (visitRoom) => visitRoom.register)
+    registeredVisitRooms: VisitRoomEntity[];
+
+    @OneToMany(() => VisitRoomEntity, (visitRoom) => visitRoom.modify)
+  modifiedVisitRooms: VisitRoomEntity[];
+
+  @OneToMany(() => VisitRoomEntity, (visitRoom) => visitRoom.doctor)
+  doctorVisitRooms: VisitRoomEntity[];
 }
 

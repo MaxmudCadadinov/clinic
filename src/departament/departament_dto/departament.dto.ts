@@ -1,13 +1,13 @@
 import { IsString, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 
 export class DTODepartament{
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     name: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
    @IsNumber()
    owner_id: number;
 
