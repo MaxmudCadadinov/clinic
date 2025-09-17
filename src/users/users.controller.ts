@@ -24,7 +24,7 @@ export class UsersController {
   @Post('/add_user')
   @UseInterceptors(FileInterceptor('photo', multerUserConfig))
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async add_user(@Query() dto: AddUser, @UploadedFile() file?: Express.Multer.File,){
+  async add_user(@Body() dto: AddUser, @UploadedFile() file?: Express.Multer.File,){
 
     if(file){dto.photo = file.path;}
     return await this.usersService.add_user(dto);

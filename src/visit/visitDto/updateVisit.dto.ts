@@ -1,5 +1,5 @@
 // update-visit.dto.ts
-import { IsOptional, IsEnum, IsInt, IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsEnum, IsInt, IsNumber, IsString, IsDateString, MaxLength } from 'class-validator';
 import { VisitState } from '../visit.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -10,12 +10,6 @@ export class UpdateVisitDto {
   @IsInt()
   @Type(() => Number)
   clientId?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  doctorId?: number;
 
   @ApiProperty({example: '2025-09-12 14:30'})
   @IsOptional()
@@ -49,5 +43,15 @@ export class UpdateVisitDto {
   @IsInt()
   @Type(() => Number)
   departament_id?: number
+
+  @IsInt()
+    @IsOptional() // потому что в БД default: 0
+    @Type(() => Number)
+    is_emergency?: number;
+  
+    @IsString()
+    @MaxLength(255)
+    @IsOptional() // потому что nullable
+    emergency_car?: string;
 
 }

@@ -1,5 +1,5 @@
 // filter-visit.dto.ts
-import { IsOptional, IsEnum, IsInt, IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsEnum, IsInt, IsNumber, IsString, IsDateString, MaxLength } from 'class-validator';
 import { VisitState } from '../visit.entity';
 import { PaginationDto } from 'src/paginationDTO';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -13,12 +13,6 @@ export class FilterVisitDto extends PaginationDto{
   @IsInt()
   @Type(() => Number)
   clientId?: number;
-  
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  doctorId?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -73,5 +67,15 @@ export class FilterVisitDto extends PaginationDto{
   @IsInt()
   @Type(() => Number)
   departament_id: number
+
+  @IsInt()
+    @IsOptional() // потому что в БД default: 0
+    @Type(() => Number)
+    is_emergency?: number;
+  
+    @IsString()
+    @MaxLength(255)
+    @IsOptional() // потому что nullable
+    emergency_car?: string;
 
 }

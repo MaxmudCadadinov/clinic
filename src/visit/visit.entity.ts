@@ -25,9 +25,9 @@ export class Visit {
   @JoinColumn({ name: "departament_id" })
   departament?: DepartamentEntity;
 
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'doctor_id' })
-  doctor: User;
+  // @ManyToOne(() => User, { nullable: true })
+  // @JoinColumn({ name: 'doctor_id' })
+  // doctor: User;
 
   @Column({ type: 'datetime', name: 'visit_date_time', nullable: true })
   visitDateTime: Date;
@@ -61,6 +61,12 @@ export class Visit {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'modify_id' })
   modify: User;
+
+  @Column({ type: 'int', default: 0 })
+  is_emergency: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  emergency_car?: string;
 
   @OneToMany(() => VisitReferalEntity, (vr) => vr.visit)
   visitReferals: VisitReferalEntity[];

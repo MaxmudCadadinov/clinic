@@ -28,21 +28,26 @@ export class VisitService {
     
     const reg_id = await this.userEntity.findOne({where:{id:Number(register)}})
     if(!reg_id){throw new NotFoundException("registering user not found")}
-    const client = await this.clientEntity.findOne({where:{id: dto.clientId}})
-    if(!client){throw new NotFoundException("client not founded")}
-    const doctor = await this.userEntity.findOne({where: {id: dto.doctorId}})
-    if(!doctor){throw new NotFoundException('Doctor not found')}
-    const departament = await this.departamentEntity.findOne({where:{id:Number(dto.departament_id)}})
-    if (!departament){throw new NotFoundException("Departament not found")}
+   
+    if(dto.clientId){
+        const client = await this.clientEntity.findOne({where:{id: dto.clientId}})
+        if(!client){throw new NotFoundException("client not founded")}
+    }
+   
+    if(dto.departament_id){
+       const departament = await this.departamentEntity.findOne({where:{id:Number(dto.departament_id)}})
+       if (!departament){throw new NotFoundException("Departament not found")}
+   }
     const new_visit = await this.visitEntity.create(
-       {client:client,
-        doctor: doctor,  
-        departament: departament,
+       {client: dto.clientId? {id: dto.clientId} : undefined,
+        departament: dto.departament_id? {id: dto.clientId} : undefined,
         price: dto.price ?? 0, 
         state: dto.state ?? VisitState.NEW,
         register: reg_id,
         visitDateTime: dto.visitDateTime? new Date(dto.visitDateTime):undefined,
-        description:dto.description
+        description:dto.description,
+        is_emergency: dto.is_emergency ?? undefined,
+        emergency_car: dto.emergency_car ?? undefined
         }
     )
     const saved_visit = await this.visitEntity.save(new_visit)
@@ -53,11 +58,12 @@ export class VisitService {
     async all_visits(dto: FilterVisitDto){
         const where: any = {}
         if(dto.clientId){where.client = Like(`%${dto.clientId}%`)}
-        if(dto.doctorId){where.doctor = {id: Number(dto.doctorId)}}
         if(dto.description){where.description = Like(`%${dto.description}%`)}
         if(dto.state){where.state = dto.state}
         if(dto.status!==undefined){where.status = Number(dto.status)}
         if(dto.departament_id){where.departament = {id: Number(dto.departament_id)}}
+        if(dto.is_emergency){where.is_emergency = dto.is_emergency}
+        if(dto.emergency_car){where.emergency_car = dto.emergency_car}
         if(dto.fromDate && dto.toDate){
             const fromData = new Date(dto.fromDate)
             const toDate = new Date(dto.toDate)
@@ -108,13 +114,14 @@ export class VisitService {
     const limit = dto.limit && dto.limit > 0 ? dto.limit : 10;
 
     const [all_visits, total] = await this.visitEntity.findAndCount({where,
-        relations:['client', 'doctor', 'modify', 'departament'],
+        relations:['client'
+            , 'modify', 'departament'],
         skip: (page - 1) * limit, take: limit, order: { created: 'DESC' }})
 
     const map = all_visits.map(visit => ({
         ...visit,
         client_id: visit.client?.id ?? null,
-        doctor_id: visit.doctor?.id ?? null,
+        
         modify_id: visit.modify?.id ?? null
     }))
     return {total, map}
@@ -129,10 +136,6 @@ async update_visit(id: string, dto: UpdateVisitDto,  user ){
         const client = await this.clientEntity.findOne({where:{id: Number(dto.clientId)}})
         if(!client){throw new NotFoundException("client not found")}
         visit.client = client}
-    if(dto.doctorId){
-        const doctor = await this.userEntity.findOne({where:{id: Number(dto.doctorId)}})
-        if(!doctor){throw new NotFoundException("Doctor not found")}
-        visit.doctor = doctor}
     if(dto.visitDateTime){
         visit.visitDateTime = new Date(dto.visitDateTime)}
     if(dto.price){visit.price = Number(dto.price)}
@@ -144,6 +147,8 @@ async update_visit(id: string, dto: UpdateVisitDto,  user ){
         visit.departament = departament
     }
     if(dto.status){visit.status = Number(dto.status) }
+    if(dto.is_emergency){visit.is_emergency = dto.is_emergency}
+    if(dto.emergency_car){visit.emergency_car = dto.emergency_car}
     visit.updated = new Date()
     visit.modify = modified_id
     await this.visitEntity.save(visit)
