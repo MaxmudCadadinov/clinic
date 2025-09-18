@@ -25,7 +25,7 @@ export class VisitServiceController {
     return await this.visitServiceService.get_v_s(dto)
   }
 
-  @Patch('/update-visit-service')
+  @Patch('/update-visit-service/:id')
   @UseGuards(JwtAuthGuard)
   async update_v_s(@Param('id', ParseIntPipe) id: string, @Body() dto: UpdateVisitServiceDto, @Req() req: Request){
     const user = (req as any).user.userId

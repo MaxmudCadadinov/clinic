@@ -116,8 +116,9 @@ export class VisitServiceService {
     }
 
     async delete_v_s(id){
-        // const v_s = await this.visitServiceEntity.findOne({where: {id: Number(id)}})
-        // if(!v_s){throw new NotFoundException("visit service not found")}
-        // await this.visitServiceEntity.update(v_s.id,)
+        const v_s = await this.visitServiceEntity.findOne({where: {id: Number(id)}})
+        if(!v_s){throw new NotFoundException("visit service not found")}
+        await this.visitServiceEntity.delete(v_s.id)
+        return {message: "visit_service deleted successfully"}
     }
 }

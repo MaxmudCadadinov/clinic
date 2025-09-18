@@ -1,6 +1,6 @@
 import { IsString, IsNumber, IsNotEmpty, IsEnum, IsDateString, IsOptional } from 'class-validator';
 import { clientType } from '../client.entity/client.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 
 export class ClientDto{
@@ -8,6 +8,7 @@ export class ClientDto{
     @ApiProperty()
     @IsString()
     name: string;
+    
     @ApiProperty()
     @IsString()
     phone: string;
@@ -18,14 +19,17 @@ export class ClientDto{
     gender: clientType;
 
     @ApiProperty({example: '1995-08-27'})
+    @IsOptional()
     @IsDateString() 
     birthday: Date;
 
     @ApiProperty()
+    @IsOptional()
     @IsString()
     address: string;
 
     @ApiProperty()
+    @IsOptional()
     @IsString()
     description: string;
 
@@ -35,6 +39,7 @@ export class ClientDto{
     source_id: number;
 
     @ApiProperty()
+    @IsOptional()
     @IsNumber()
     group_id: number;
 

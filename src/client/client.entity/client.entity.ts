@@ -59,7 +59,7 @@ export class ClientEntity {
   @JoinColumn({ name: 'modify_id' })
   modify: User;
 
-  @ManyToOne(() => ClientGroupEntity)
+  @ManyToOne(() => ClientGroupEntity, { nullable: true })
   @JoinColumn({ name: 'group_id' })
   group: ClientGroupEntity;
 

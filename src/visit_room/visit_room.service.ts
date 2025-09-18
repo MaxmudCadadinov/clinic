@@ -87,6 +87,40 @@ export class VisitRoomService {
             where.price = LessThanOrEqual(Number(dto.maxPrice));
         }
 
+
+        if(dto.date_start_from && dto.date_start_to){
+            const toDate = new Date(dto.date_start_to)
+            const fromDate = new Date(dto.date_start_from)
+            fromDate.setHours(0, 0, 0, 0)
+            toDate.setHours(23, 59, 59, 999)
+
+            where.date_start = Between(fromDate, toDate)
+        }else if(dto.date_start_from && !dto.date_start_to){
+            const fromDate = new Date(dto.date_start_from)
+            fromDate.setHours(0, 0, 0, 0)
+            where.date_start = MoreThanOrEqual(fromDate)
+        }else if(!dto.date_start_from && dto.date_start_to){
+            const toDate = new Date(dto.date_start_to)
+            toDate.setHours(23, 59, 59, 999)
+            where.date_start = LessThanOrEqual(toDate)
+        }
+
+        if(dto.date_end_from && dto.date_end_to){
+            const fromDate = new Date(dto.date_end_from)
+            const toDate = new Date(dto.date_end_to)
+            fromDate.setHours(0, 0, 0, 0)
+            toDate.setHours(23, 59, 59, 999)
+            where.date_end = Between(fromDate, toDate)
+        }else if(dto.date_end_from && !dto.date_end_to){
+            const fromDate = new Date(dto.date_end_from)
+            fromDate.setHours(0, 0, 0, 0)
+            where.date_end = MoreThanOrEqual(fromDate)
+        }else if(!dto.date_end_from && dto.date_end_to){
+            const toDate = new Date(dto.date_end_to)
+            toDate.setHours(23, 59, 59, 999)
+            where.date_end = LessThanOrEqual(toDate)
+        }
+
     if(dto.created_from && dto.created_to){
         
         const toDate = new Date(dto.created_to);

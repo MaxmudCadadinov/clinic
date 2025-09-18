@@ -105,7 +105,7 @@ export class VisitReferalService {
         const visit_referal = await this.visitReferalEntity.findOne({where: {id: Number(id)}})
         if(!visit_referal){throw new NotFoundException("visit referal not found")}
         if(dto.visitId){
-            const visit = await this.visitEntity.findOne({where: {id:Number(dto.serviceId)}})
+            const visit = await this.visitEntity.findOne({where: {id:Number(dto.visitId)}})
             if(!visit){throw new NotFoundException("visit not found")}
             visit_referal.visit = visit
         }
@@ -124,6 +124,8 @@ export class VisitReferalService {
         if(dto.price_referal){visit_referal.price_referal = Number(dto.price_referal)}
         visit_referal.updated = new Date()
         visit_referal.modify = modify
+
+        return await this.visitReferalEntity.save(visit_referal)
     
     }
 
