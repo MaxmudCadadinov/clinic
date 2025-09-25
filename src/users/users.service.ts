@@ -152,13 +152,12 @@ async refresh_token(dto: RefreshDto ) {
     }
 }
 
-async logout(id: string){
-    const user = await this.userRepository.findOne({where: {id: Number(id)}})
-    if(!user){throw new NotFoundException('User not found')}
+async logout(user){
+    const logaut_user = await this.userRepository.findOne({where: {id: Number(user)}})
+    if(!logaut_user){throw new NotFoundException('User not found')}
 
-    user.refresh_token = null;
-    await this.userRepository.save(user)
-    return {message: 'Logged out successfully'
-}
+    logaut_user.refresh_token = null;
+    await this.userRepository.save(logaut_user)
+    return {message: 'Logged out successfully'}
 }
 }
