@@ -151,4 +151,14 @@ async refresh_token(dto: RefreshDto ) {
     throw new UnauthorizedException('Invalid refresh token');
     }
 }
+
+async logout(id: string){
+    const user = await this.userRepository.findOne({where: {id: Number(id)}})
+    if(!user){throw new NotFoundException('User not found')}
+
+    user.refresh_token = null;
+    await this.userRepository.save(user)
+    return {message: 'Logged out successfully'
+}
+}
 }

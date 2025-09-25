@@ -29,7 +29,7 @@ export class User{
     phone: string
 
     @Column({ type: 'varchar', length: 255, nullable: true, select: false })
-    refresh_token: string;
+    refresh_token: string | null;
 
     @ManyToOne(() => RoleEntity, role => role.users, { eager: true })
     @JoinColumn({ name: 'role_id' })

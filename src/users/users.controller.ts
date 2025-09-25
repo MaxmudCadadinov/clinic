@@ -60,6 +60,12 @@ export class UsersController {
   async refresh(@Body() dto: RefreshDto){
     return await this.usersService.refresh_token(dto)
   }
+
+  @Get('/logout/:id')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Param('id',ParseIntPipe) id: string){
+    return await this.usersService.logout(id)
+  }
 }
 
 
