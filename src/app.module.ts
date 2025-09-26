@@ -16,8 +16,6 @@ import { UserRoleModule } from './user_role/user_role.module';
 import { VisitModule } from './visit/visit.module';
 import { ReferalModule } from './referal/referal.module';
 import { VisitReferalModule } from './visit_referal/visit_referal.module';
-import { VisitRoomService } from './visit_room/visit_room.service';
-import { VisitRoomController } from './visit_room/visit_room.controller';
 import { VisitRoomModule } from './visit_room/visit_room.module';
 import { RoomModule } from './room/room.module';
 import { VisitServiceModule } from './visit_service/visit_service.module';

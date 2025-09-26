@@ -35,7 +35,10 @@ export class UsersService  {
         if (user){throw new BadRequestException('Username already exists')}
         const role = await this.roleEntity.findOne({ where: { id: dto.role_id } });
         if (!role) {throw new BadRequestException('Role not found');}
-    const newUser = this.userRepository.create({name: dto.name, user_name: dto.username, role: role, chat_id: dto.chat_id});
+
+
+    const newUser = this.userRepository.create({name: dto.name, user_name: dto.username, role: role, chat_id: dto.chat_id, phone: dto.phone});
+    
     if(!dto.password || dto.password.trim()===''){throw new NotFoundException('Пароль пустой')}else{newUser.password = dto.password}
     if(dto.photo){
         newUser.photo = dto.photo;
